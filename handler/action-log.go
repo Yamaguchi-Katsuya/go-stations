@@ -21,6 +21,7 @@ func NewActionLogHandler() *ActionLogHandler {
 func (a *ActionLogHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	time.Sleep(50 * time.Millisecond)
 	response := &model.ActionLogResponse{}
+	w.Header().Set("Content-Type", "application/json")
 	err := json.NewEncoder(w).Encode(response)
 	if err != nil {
 		log.Println(err)
