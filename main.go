@@ -65,12 +65,12 @@ func realMain() error {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
 
-	// err = gracefulShutdownWithWaitGroup(srv, ctx, port)
+	// err = gracefulShutdownWithWaitGroup(srv, ctx)
 	// if err != nil {
 	// 	return err
 	// }
 
-	err = gracefulShutdownWithGoRoutine(srv, ctx, port)
+	err = gracefulShutdownWithGoRoutine(srv, ctx)
 	if err != nil {
 		return err
 	}
@@ -78,7 +78,7 @@ func realMain() error {
 	return nil
 }
 
-func gracefulShutdownWithWaitGroup(srv *http.Server, ctx context.Context, port string) error {
+func gracefulShutdownWithWaitGroup(srv *http.Server, ctx context.Context) error {
 	// ListenAndServeでエラーが発生した場合にそのまま処理が進まないようWaitGroupを使う
 	wg := &sync.WaitGroup{}
 	wg.Add(1)
@@ -97,7 +97,7 @@ func gracefulShutdownWithWaitGroup(srv *http.Server, ctx context.Context, port s
 		log.Println("Server gracefully stopped")
 	}()
 
-	log.Printf("Server is starting on %s\n", port)
+	log.Printf("Server is starting on %s\n", srv.Addr)
 
 	// Start server
 	if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
@@ -108,11 +108,11 @@ func gracefulShutdownWithWaitGroup(srv *http.Server, ctx context.Context, port s
 	return nil
 }
 
-func gracefulShutdownWithGoRoutine(srv *http.Server, ctx context.Context, port string) error {
+func gracefulShutdownWithGoRoutine(srv *http.Server, ctx context.Context) error {
 	errCh := make(chan error, 1)
 
 	go func() {
-		log.Printf("Server is starting on %s\n", port)
+		log.Printf("Server is starting on %s\n", srv.Addr)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Printf("ListenAndServe error: %v", err)
 			errCh <- err
